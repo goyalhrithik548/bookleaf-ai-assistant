@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookLeaf AI Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="app-shell">
+        <section class="chat-panel" aria-label="BookLeaf AI chat">
+            <header class="chat-header">
+                <div>
+                    <p class="eyebrow">BookLeaf</p>
+                    <h1>AI Assistant</h1>
+                </div>
+                <input id="emailInput" class="email-input" type="email" placeholder="author email">
+            </header>
+
+            <div id="chatLog" class="chat-log" aria-live="polite"></div>
+
+            <div id="loadingIndicator" class="loading-indicator" hidden>
+                Thinking...
+            </div>
+
+            <form id="chatForm" class="chat-form">
+                <input
+                    id="messageInput"
+                    class="message-input"
+                    type="text"
+                    autocomplete="off"
+                    placeholder="Ask about royalties, publishing rules, or dashboard access"
+                    required
+                >
+                <button id="sendButton" class="send-button" type="submit">Send</button>
+            </form>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

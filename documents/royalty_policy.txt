@@ -1,0 +1,24 @@
+
+ROYALTY PAYMENT POLICY
+
+1. Royalty payments are released on the 5th of every month.
+
+2. Minimum payout threshold is ₹1000.
+
+3. Payment methods:
+   - Bank Transfer
+   - UPI
+
+4. Delayed payments may occur during bank holidays.
+
+5. Royalty reports are updated weekly.
+
+6. Pending royalties are marked as Processing.
+
+7. Paid royalties are marked as Paid.
+
+8. Failed payments require account verification.
+
+9. Authors can contact support for royalty disputes.
+
+10. Tax deductions apply according to Indian regulations.

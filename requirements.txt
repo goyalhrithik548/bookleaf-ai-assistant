@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-dotenv
+supabase
+openai
+langchain
+langchain-community
+langchain-huggingface
+faiss-cpu
+sentence-transformers
+pydantic
+rapidfuzz
+requests
