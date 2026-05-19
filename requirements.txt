@@ -11,3 +11,4 @@ sentence-transformers
 pydantic
 rapidfuzz
 requests
+groq==0.25.0
