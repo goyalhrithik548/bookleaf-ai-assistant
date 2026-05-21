@@ -171,53 +171,24 @@ def get_chat_history(session_id):
     return messages
 
 
-def log_query(query, detected_intent, confidence, escalated=False):
+def log_query(query, detected_intent, confidence, escalated=False, ai_response""):
     global _QUERY_LOG_SCHEMA
 
-    required_payload = {
+    payload = {
         "query": query,
         "detected_intent": detected_intent,
         "confidence": confidence,
         "escalated": escalated,
-        "timestamp": _utc_timestamp()
-    }
-
-    if _QUERY_LOG_SCHEMA in (None, "required"):
-        try:
-            data = execute_supabase_query(
-                get_table("query_logs").insert(required_payload),
-                "log query"
-            )
-            _QUERY_LOG_SCHEMA = "required"
-
-            if escalated:
-                logger.info("Logged escalated query with intent=%s confidence=%s", detected_intent, confidence)
-            else:
-                logger.info("Logged query with intent=%s confidence=%s", detected_intent, confidence)
-
-            return data
-
-        except SchemaMismatchError:
-            _QUERY_LOG_SCHEMA = "legacy"
-
-    legacy_payload = {
-        "user_query": query,
-        "detect_intent": detected_intent,
-        "confidence_score": confidence,
-        "ai_response": "",
-        "escalation": escalated,
+        "ai_response": ai_response,
         "timestamp": _utc_timestamp()
     }
 
     data = execute_supabase_query(
-        get_table("query_logs").insert(legacy_payload),
-        "log query legacy"
+        get_table("query_logs").insert(payload),
+        "log query"
     )
 
-    if escalated:
-        logger.info("Logged escalated query with intent=%s confidence=%s", detected_intent, confidence)
-    else:
-        logger.info("Logged query with intent=%s confidence=%s", detected_intent, confidence)
+    logger.info("Logged query with intent=%s confidence=%s", detected_intent, confidence)
 
     return data
 
