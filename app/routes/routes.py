@@ -1,5 +1,6 @@
 import logging
 import requests
+
 from fastapi import APIRouter
 
 from app.services.memory_service import get_chat_history
@@ -15,41 +16,36 @@ from app.services.database_service import (
 from app.services.response_service import generate_response
 from app.services.logging_service import log_query
 
-# NEW IMPORT
+# AUTHOR PROFILE IMPORT
 from app.database.queries import get_author_by_email
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-N8N_WEBHOOK_URL = "https://eclair-snowcap-stoppable.ngrok-free.dev/webhook/author-support"
+
+# =====================================
+# N8N WEBHOOK URL
+# =====================================
+N8N_WEBHOOK_URL = (
+    "https://eclair-snowcap-stoppable.ngrok-free.dev/"
+    "webhook/author-support"
+)
+
 
 @router.post("/chat")
 def chat(payload: dict):
+
     try:
+
         query = payload.get("query")
         email = payload.get("email")
         session_id = payload.get("session_id")
 
         # =====================================
-        # TRIGGER N8N AUTOMATION
+        # VALIDATION
         # =====================================
-
-        try:
-
-            requests.post(
-                N8N_WEBHOOK_URL,
-                json={
-                    "email": email,
-                    "query": query,
-                    "session_id": session_id
-                },
-                timeout=5
-            )
-
-        except Exception as e:
-
-            logger.warning(f"N8N webhook failed: {e}")
-        
         if not query or not str(query).strip():
+
             return {
                 "success": False,
                 "message": "Query is required"
@@ -75,40 +71,63 @@ def chat(payload: dict):
 
             if author:
 
+                # =====================================
                 # BOOK TITLE
+                # =====================================
                 if "book title" in lower_query:
 
                     return {
                         "success": True,
                         "intent": "author_book_title",
-                        "response": f'Your book title is "{author.get("book_title")}".'
+                        "response": (
+                            f'Your book title is '
+                            f'"{author.get("book_title")}".'
+                        )
                     }
 
+                # =====================================
                 # INSTAGRAM HANDLE
+                # =====================================
                 if "instagram" in lower_query:
 
                     return {
                         "success": True,
                         "intent": "author_instagram",
-                        "response": f'Your Instagram handle is "{author.get("instagram_handle")}".'
+                        "response": (
+                            f'Your Instagram handle is '
+                            f'"{author.get("instagram_handle")}".'
+                        )
                     }
 
+                # =====================================
                 # PHONE NUMBER
+                # =====================================
                 if "phone" in lower_query or "mobile" in lower_query:
 
                     return {
                         "success": True,
                         "intent": "author_phone",
-                        "response": f'Your registered phone number is "{author.get("phone")}".'
+                        "response": (
+                            f'Your registered phone number is '
+                            f'"{author.get("phone")}".'
+                        )
                     }
 
-                # AUTHOR NAME / IDENTITY
-                if "who am i" in lower_query or "my name" in lower_query:
+                # =====================================
+                # AUTHOR NAME
+                # =====================================
+                if (
+                    "who am i" in lower_query
+                    or "my name" in lower_query
+                ):
 
                     return {
                         "success": True,
                         "intent": "author_identity",
-                        "response": f'You are {author.get("author_name")}.'
+                        "response": (
+                            f'You are '
+                            f'{author.get("author_name")}.'
+                        )
                     }
 
         # =====================================
@@ -124,19 +143,59 @@ def chat(payload: dict):
         # =====================================
         if intent_result["confidence"] < 0.80:
 
+            # =====================================
+            # TRIGGER N8N WEBHOOK
+            # =====================================
+            try:
+
+                requests.post(
+                    N8N_WEBHOOK_URL,
+                    json={
+                        "email": email,
+                        "query": query,
+                        "session_id": session_id,
+                        "intent": intent_result["intent"],
+                        "confidence": (
+                            intent_result["confidence"]
+                        )
+                    },
+                    timeout=5
+                )
+
+            except Exception as e:
+
+                logger.warning(
+                    f"N8N webhook failed: {e}"
+                )
+
+            # =====================================
+            # LOG ESCALATION
+            # =====================================
             log_query(
                 user_query=query,
                 detected_intent=intent_result["intent"],
-                confidence_score=intent_result["confidence"],
-                ai_response="Escalated to human agent",
+                confidence_score=(
+                    intent_result["confidence"]
+                ),
+                ai_response=(
+                    "Escalated to human agent"
+                ),
                 escalation=True
             )
 
+            # =====================================
+            # RETURN ESCALATION RESPONSE
+            # =====================================
             return {
                 "success": False,
                 "escalate": True,
-                "message": "Confidence score too low. Escalating to human agent.",
-                "confidence": intent_result["confidence"]
+                "message": (
+                    "Confidence score too low. "
+                    "Escalating to human agent."
+                ),
+                "confidence": (
+                    intent_result["confidence"]
+                )
             }
 
         # =====================================
@@ -150,23 +209,31 @@ def chat(payload: dict):
         if route["route"] == "knowledge_base":
 
             try:
+
                 rag_context = search_documents(query)
 
             except RagRetrievalError:
+
                 return {
                     "success": False,
                     "message": "RAG retrieval failed"
                 }
 
             if not rag_context:
+
                 return {
                     "success": False,
-                    "message": "No matching knowledge base content found"
+                    "message": (
+                        "No matching knowledge "
+                        "base content found"
+                    )
                 }
 
             final_response = generate_response(
                 user_query=query,
-                database_result="Knowledge Base Query",
+                database_result=(
+                    "Knowledge Base Query"
+                ),
                 session_id=session_id,
                 rag_context=rag_context,
                 email=email
@@ -174,15 +241,21 @@ def chat(payload: dict):
 
             log_query(
                 user_query=query,
-                detected_intent=intent_result["intent"],
-                confidence_score=intent_result["confidence"],
+                detected_intent=(
+                    intent_result["intent"]
+                ),
+                confidence_score=(
+                    intent_result["confidence"]
+                ),
                 ai_response=final_response,
                 escalation=False
-             )
-            
+            )
+
             return {
                 "success": True,
-                "intent": intent_result["intent"],
+                "intent": (
+                    intent_result["intent"]
+                ),
                 "response": final_response
             }
 
@@ -192,39 +265,48 @@ def chat(payload: dict):
         if route["route"] == "database":
 
             try:
+
                 data = fetch_author_data(
                     email=email,
-                    intent=intent_result["intent"]
+                    intent=(
+                        intent_result["intent"]
+                    )
                 )
 
             except AuthorNotFoundError as exc:
+
                 return {
                     "success": False,
                     "message": str(exc)
                 }
 
             except MultipleAuthorsFoundError as exc:
+
                 return {
                     "success": False,
                     "message": str(exc)
                 }
 
             except DatabaseConnectionError as exc:
+
                 return {
                     "success": False,
                     "message": str(exc)
                 }
 
             except ValueError as exc:
+
                 return {
                     "success": False,
                     "message": str(exc)
                 }
 
             try:
+
                 rag_context = search_documents(query)
 
             except RagRetrievalError:
+
                 return {
                     "success": False,
                     "message": "RAG retrieval failed"
@@ -240,18 +322,27 @@ def chat(payload: dict):
 
             log_query(
                 user_query=query,
-                detected_intent=intent_result["intent"],
-                confidence_score=intent_result["confidence"],
+                detected_intent=(
+                    intent_result["intent"]
+                ),
+                confidence_score=(
+                    intent_result["confidence"]
+                ),
                 ai_response=final_response,
                 escalation=False
             )
 
             return {
                 "success": True,
-                "intent": intent_result["intent"],
+                "intent": (
+                    intent_result["intent"]
+                ),
                 "response": final_response
             }
 
+        # =====================================
+        # UNKNOWN ROUTE
+        # =====================================
         return {
             "success": False,
             "message": "Unknown route"
@@ -259,7 +350,9 @@ def chat(payload: dict):
 
     except RuntimeError as exc:
 
-        logger.exception("Chat request failed")
+        logger.exception(
+            "Chat request failed"
+        )
 
         return {
             "success": False,
@@ -268,7 +361,9 @@ def chat(payload: dict):
 
     except Exception:
 
-        logger.exception("Chat request failed")
+        logger.exception(
+            "Chat request failed"
+        )
 
         return {
             "success": False,
