@@ -1,5 +1,5 @@
 import logging
-
+import requests
 from fastapi import APIRouter
 
 from app.services.memory_service import get_chat_history
@@ -20,17 +20,35 @@ from app.database.queries import get_author_by_email
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
+N8N_WEBHOOK_URL = "http://localhost:5678/webhook/author-support"
 
 @router.post("/chat")
 def chat(payload: dict):
-
     try:
-
         query = payload.get("query")
         email = payload.get("email")
         session_id = payload.get("session_id")
 
+        # =====================================
+        # TRIGGER N8N AUTOMATION
+        # =====================================
+
+        try:
+
+            requests.post(
+                N8N_WEBHOOK_URL,
+                json={
+                    "email": email,
+                    "query": query,
+                    "session_id": session_id
+                },
+                timeout=5
+            )
+
+        except Exception as e:
+
+            logger.warning(f"N8N webhook failed: {e}")
+        
         if not query or not str(query).strip():
             return {
                 "success": False,
