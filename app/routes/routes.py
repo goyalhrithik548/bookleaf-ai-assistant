@@ -26,10 +26,7 @@ router = APIRouter()
 # =====================================
 # N8N WEBHOOK URL
 # =====================================
-N8N_WEBHOOK_URL = (
-    "https://eclair-snowcap-stoppable.ngrok-free.dev/"
-    "webhook/author-support"
-)
+N8N_WEBHOOK_URL = "https://eclair-snowcap-stoppable.ngrok-free.dev/webhook/author-support"
 
 
 @router.post("/chat")
