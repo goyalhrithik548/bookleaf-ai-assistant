@@ -171,7 +171,7 @@ def get_chat_history(session_id):
     return messages
 
 
-def log_query(query, detected_intent, confidence, escalated=False, ai_response""):
+def log_query(query, detected_intent, confidence, ai_response"", escalated=False):
     global _QUERY_LOG_SCHEMA
 
     payload = {
