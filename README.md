@@ -1,4 +1,4 @@
-# BookLeaf AI Assistant
+# BookPublishing AI Assistant
 
 An AI-powered publishing support assistant built using FastAPI, Groq LLMs, RAG (Retrieval-Augmented Generation), FAISS vector search, and Supabase.
 
